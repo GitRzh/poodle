@@ -14,21 +14,13 @@ function isDark() {
   return state.dark;
 }
 
-function backendRequest(endpoint, body) {
+function groqRequest(messages) {
   return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error("Request timed out")), 20000);
-    try {
-      chrome.runtime.sendMessage({ type: "BACKEND_REQUEST", endpoint, body }, (res) => {
-        clearTimeout(timer);
-        if (chrome.runtime.lastError) return reject(new Error(chrome.runtime.lastError.message));
-        if (!res) return reject(new Error("No response from background"));
-        if (res.error) return reject(new Error(res.error));
-        resolve(res.result);
-      });
-    } catch(e) {
-      clearTimeout(timer);
-      reject(e);
-    }
+    chrome.runtime.sendMessage({ type: "GROQ_REQUEST", messages }, (res) => {
+      if (chrome.runtime.lastError) return reject(new Error(chrome.runtime.lastError.message));
+      if (res.error) return reject(new Error(res.error));
+      resolve(res.result);
+    });
   });
 }
 
@@ -65,12 +57,7 @@ async function runQuickSummary(length, format, fontSize) {
   const prompt = `Summarise the following webpage content in ${lengthMap[length] || "1 paragraph"}.${formatNote} Use plain, simple language.\n\n${getPageText()}`;
 
   try {
-    const data = await backendRequest("/summarize", {
-      text:   getPageText(),
-      length: length   || "medium",
-      format: format   || "paragraph"
-    });
-    const result = data.result || "";
+    const result = await groqRequest([{ role: "user", content: prompt }]);
     const content = panel.querySelector(".panel-content");
     content.classList.remove("panel-loading");
 
@@ -104,8 +91,8 @@ async function runSimplifySelection(text, level) {
   showInlineLoading(popup);
 
   try {
-    const data = await backendRequest("/simplify", { text, level: level || "simple" });
-    setInlineContent(popup, data.result || "");
+    const result = await groqRequest([{ role: "user", content: prompt }]);
+    setInlineContent(popup, result);
   } catch (e) {
     setInlineContent(popup, "Error: " + e.message, true);
   }
@@ -125,12 +112,16 @@ Text: "${text}"`;
   showInlineLoading(popup);
 
   try {
-    const data = await backendRequest("/translate", { text, lang: lang || "English" });
-    let html = `<div style="margin-bottom:8px">${escHtml(data.translation || "")}</div>`;
-    if (data.note) {
+    const result = await groqRequest([{ role: "user", content: prompt }]);
+    const parts = result.split(/^NOTE:/m);
+    let mainText = parts[0].trim();
+    let note = parts[1] ? parts[1].trim() : null;
+
+    let html = `<div style="margin-bottom:8px">${escHtml(mainText)}</div>`;
+    if (note && note !== "No special notes.") {
       html += `<div class="poodle-cultural-note${isDark() ? " dark" : ""}">
         <div class="poodle-cultural-note-label">Cultural note</div>
-        ${escHtml(data.note)}
+        ${escHtml(note)}
       </div>`;
     }
     setInlineHTML(popup, html);
@@ -209,8 +200,16 @@ async function checkDomainAge(domain) {
   const row = document.getElementById("li-age-row");
   if (!row) return;
   try {
-    const res  = await fetch(`http://localhost:8000/domain-age?domain=${encodeURIComponent(domain)}`);
-    if (!res.ok) throw new Error("bad response");
+    const LOCAL  = "http://localhost:8000";
+    const REMOTE = "https://your-app.koyeb.app"; // replace after deploying
+    let res = null;
+    for (const base of [LOCAL, REMOTE]) {
+      try {
+        res = await fetch(`${base}/domain-age?domain=${encodeURIComponent(domain)}`);
+        if (res.ok) break;
+      } catch (_) {}
+    }
+    if (!res || !res.ok) throw new Error("both failed");
     const data = await res.json();
     if (data.age_years !== null && data.age_years !== undefined) {
       const years = parseFloat(data.age_years);
@@ -275,12 +274,14 @@ Claim: "${text}"`;
   showInlineLoading(popup);
 
   try {
-    const data    = await backendRequest("/factcheck", { text });
-    const verdict = data.verdict || "unverifiable";
-    const cls     = verdict === "likely true" ? "true" : verdict === "misleading" ? "misleading" : "unverifiable";
+    const raw    = await groqRequest([{ role: "user", content: prompt }]);
+    const json   = JSON.parse(raw.replace(/```json|```/g, "").trim());
+    const verdict = json.verdict || "unverifiable";
+    const cls    = verdict === "likely true" ? "true" : verdict === "misleading" ? "misleading" : "unverifiable";
+
     setInlineHTML(popup, `
       <div class="poodle-verdict ${cls}${isDark() ? " dark" : ""}">${verdict.toUpperCase()}</div>
-      <div style="font-size:13px;line-height:1.6">${escHtml(data.reason || "")}</div>
+      <div style="font-size:13px;line-height:1.6">${escHtml(json.reason || "")}</div>
     `);
   } catch (e) {
     setInlineContent(popup, "Error: " + e.message, true);
