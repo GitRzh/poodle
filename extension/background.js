@@ -2,8 +2,25 @@
 // POODLE — background.js
 // ═══════════════════════════════════════════════════════
 
-// Replace this with your Koyeb URL after deploying
-const BACKEND = "https://your-app.koyeb.app";
+const LOCAL   = "http://localhost:8000";
+const REMOTE  = "https://your-app.koyeb.app"; // replace after deploying
+
+// Try local first, fall back to remote
+async function fetchBackend(endpoint, body) {
+  for (const base of [LOCAL, REMOTE]) {
+    try {
+      const res = await fetch(`${base}${endpoint}`, {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify(body)
+      });
+      if (res.ok) return { result: await res.json() };
+    } catch (_) {
+      // this server not reachable, try next
+    }
+  }
+  return { error: "Backend unreachable — local and remote both failed." };
+}
 
 // ── Context menu setup ────────────────────────────────
 chrome.runtime.onInstalled.addListener(() => {
@@ -40,24 +57,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type !== "BACKEND_REQUEST") return false;
 
   (async () => {
-    try {
-      const res = await fetch(`${BACKEND}${message.endpoint}`, {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify(message.body)
-      });
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        sendResponse({ error: err.detail || `Backend error ${res.status}` });
-        return;
-      }
-
-      sendResponse({ result: await res.json() });
-
-    } catch (e) {
-      sendResponse({ error: "Backend unreachable — is the server running?" });
-    }
+    const response = await fetchBackend(message.endpoint, message.body);
+    sendResponse(response);
   })();
 
   return true;
