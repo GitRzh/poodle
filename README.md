@@ -1,4 +1,4 @@
-# Poodle — Browser Toolkit Extension
+# Poodle — Browser Toolkit
 
 > Highlight text, hover a link, or click a button. Get instant summaries, translations, simplifications, fact checks, and link safety — on any webpage.
 
