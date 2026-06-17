@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Poodle settings</title>
+<link rel="stylesheet" href="options.css" />
+</head>
+<body>
+  <div class="container">
+    <div class="header-row">
+      <h1>Poodle settings</h1>
+      <button id="theme-toggle" class="icon-btn" aria-label="Toggle dark mode">
+        <span id="theme-icon">&#9789;</span>
+      </button>
+    </div>
+
+    <p class="help-text">
+      Poodle works out of the box — no key needed. If you want to use
+      your own Groq API key instead (e.g. for higher rate limits), paste it below.
+      Get one free at
+      <a href="https://console.groq.com/keys" target="_blank">console.groq.com/keys</a>.
+    </p>
+
+    <label for="api-key">Your Groq API key (optional)</label>
+    <input type="password" id="api-key" placeholder="gsk_..." autocomplete="off" />
+
+    <div class="btn-row">
+      <button id="save-btn" class="primary-btn">Save key</button>
+      <button id="clear-btn" class="secondary-btn">Use default</button>
+    </div>
+
+    <p id="status" class="status"></p>
+    <p id="key-status" class="help-text small" style="margin-top:8px"></p>
+  </div>
+  <script src="options.js"></script>
+</body>
+</html>

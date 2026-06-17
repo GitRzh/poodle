@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Poodle</title>
+<link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+
+  <header class="header">
+    <span class="title">Poodle</span>
+    <button id="theme-toggle" class="icon-btn" aria-label="Toggle dark mode">
+      <span id="theme-icon">&#9728;</span>
+    </button>
+  </header>
+
+  <p class="section-label">On this page</p>
+
+  <!-- Quick Summary -->
+  <section class="mode-block">
+    <div class="mode-row">
+      <div class="mode-label">
+        <span class="mode-name">Quick Summary</span>
+        <span class="mode-desc">TL;DR of any page</span>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="quicksummary-toggle" />
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div id="quicksummary-settings" class="settings-panel hidden">
+      <div class="setting-row">
+        <label for="qs-length">Length</label>
+        <select id="qs-length">
+          <option value="short">Short</option>
+          <option value="medium" selected>Medium</option>
+          <option value="full">Full</option>
+        </select>
+      </div>
+      <div class="setting-row">
+        <label for="qs-format">Format</label>
+        <select id="qs-format">
+          <option value="paragraph" selected>Paragraph</option>
+          <option value="bullets">Bullet points</option>
+        </select>
+      </div>
+      <div class="setting-row">
+        <label for="qs-fontsize">Text size</label>
+        <select id="qs-fontsize">
+          <option value="small">Small</option>
+          <option value="medium" selected>Medium</option>
+          <option value="large">Large</option>
+          <option value="xl">Extra large</option>
+        </select>
+      </div>
+      <button id="quicksummary-btn" class="action-btn">Summarise this page</button>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- Simplify This -->
+  <section class="mode-block">
+    <div class="mode-row">
+      <div class="mode-label">
+        <span class="mode-name">Simplify This</span>
+        <span class="mode-desc">Select text → rewrite it simply</span>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="simplify-toggle" />
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div id="simplify-settings" class="settings-panel hidden">
+      <div class="setting-row">
+        <label for="simplify-level">Reading level</label>
+        <select id="simplify-level">
+          <option value="child">Child (age 8–10)</option>
+          <option value="simple" selected>Plain English</option>
+          <option value="teen">Teen (age 14–16)</option>
+        </select>
+      </div>
+      <p class="settings-note">Highlight any text on the page, then right-click → "Simplify This".</p>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- Translate & Explain -->
+  <section class="mode-block">
+    <div class="mode-row">
+      <div class="mode-label">
+        <span class="mode-name">Translate &amp; Explain</span>
+        <span class="mode-desc">Translate + explain idioms</span>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="translate-toggle" />
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div id="translate-settings" class="settings-panel hidden">
+      <div class="setting-row">
+        <label for="translate-lang">Translate to</label>
+        <select id="translate-lang">
+          <option value="English" selected>English</option>
+          <option value="Arabic">Arabic</option>
+          <option value="Bengali">Bengali</option>
+          <option value="Chinese">Chinese (Simplified)</option>
+          <option value="French">French</option>
+          <option value="German">German</option>
+          <option value="Hindi">Hindi</option>
+          <option value="Japanese">Japanese</option>
+          <option value="Portuguese">Portuguese</option>
+          <option value="Spanish">Spanish</option>
+          <option value="Swahili">Swahili</option>
+        </select>
+      </div>
+      <p class="settings-note">Highlight any text → right-click → "Translate &amp; Explain". Cultural notes included.</p>
+    </div>
+  </section>
+
+  <div class="divider thick"></div>
+  <p class="section-label">Always on</p>
+
+  <!-- Link Check -->
+  <section class="mode-block">
+    <div class="mode-row">
+      <div class="mode-label">
+        <span class="mode-name">Link Check</span>
+        <span class="mode-desc">Hover a link to see its safety</span>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="linkcheck-toggle" />
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div id="linkcheck-settings" class="settings-panel hidden">
+      <div class="preview-wrap">
+        <div class="li-preview-domain">example.com</div>
+        <div class="li-preview-row li-ok">✓ HTTPS secure</div>
+        <div class="li-preview-row li-ok">✓ 3.2 years old</div>
+        <div class="li-preview-row li-ok">✓ No phishing flags</div>
+      </div>
+      <p class="settings-note">Checks HTTPS, domain age, and typo-squatting on hover.</p>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- Fact Check -->
+  <section class="mode-block">
+    <div class="mode-row">
+      <div class="mode-label">
+        <span class="mode-name">Fact Check</span>
+        <span class="mode-desc">Select a claim to verify it</span>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="factcheck-toggle" />
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div id="factcheck-settings" class="settings-panel hidden">
+      <p class="settings-note">Highlight any claim on the page → right-click → "Fact Check". Returns a verdict: likely true, misleading, or unverifiable.</p>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <footer class="footer">
+    <button id="open-options" class="link-btn">Settings / API key</button>
+  </footer>
+
+  <script src="popup.js"></script>
+</body>
+</html>

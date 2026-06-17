@@ -1,0 +1,184 @@
+/* ── Unsupported notice ── */
+#poodle-unsupported-notice {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 999999;
+  background: #fdecec;
+  color: #a02525;
+  border: 1px solid #f0bcbc;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+}
+
+/* ── Link Check hover card ── */
+#poodle-link-info-card {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: 999999;
+  width: 260px;
+  background: #ffffff;
+  color: #111111;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 13px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.12s, transform 0.12s;
+}
+#poodle-link-info-card.visible { opacity: 1; transform: translateY(0); }
+#poodle-link-info-card.dark    { background: #111111; color: #f5f5f5; border-color: #2a2a2a; }
+#poodle-link-info-card .li-domain  { font-weight: 700; margin-bottom: 6px; word-break: break-all; }
+#poodle-link-info-card .li-row     { margin-bottom: 3px; }
+#poodle-link-info-card .li-ok      { color: #1a7a1a; }
+#poodle-link-info-card.dark .li-ok { color: #4ade4a; }
+#poodle-link-info-card .li-warn    { color: #b33; font-weight: 600; }
+#poodle-link-info-card .li-muted   { color: #888888; }
+#poodle-link-info-card #li-dest-row { color: #555555; font-size: 12px; margin-bottom: 6px; word-break: break-all; }
+#poodle-link-info-card.dark #li-dest-row { color: #aaaaaa; }
+#poodle-link-info-card .li-loading { color: #777777; }
+#poodle-link-info-card .li-alert {
+  margin-top: 8px;
+  padding: 6px 8px;
+  background: #fdecec;
+  color: #a02525;
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+/* ── Shared side panel ── */
+.poodle-side-panel {
+  position: fixed;
+  top: 0; right: 0;
+  height: 100%;
+  width: 360px;
+  background: #ffffff;
+  color: #111111;
+  border-left: 1px solid #e0e0e0;
+  z-index: 999999;
+  padding: 20px 20px 60px;
+  overflow-y: auto;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  box-shadow: -2px 0 12px rgba(0,0,0,0.08);
+  box-sizing: border-box;
+}
+.poodle-side-panel.dark { background: #111111; color: #f5f5f5; border-left-color: #2a2a2a; }
+.poodle-side-panel .panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.poodle-side-panel .panel-title   { font-weight: 700; font-size: 15px; }
+.poodle-side-panel .panel-close   { cursor: pointer; background: none; border: none; font-size: 18px; color: inherit; }
+.poodle-side-panel .panel-content { line-height: 1.7; }
+.poodle-side-panel .panel-loading { font-size: 13px; color: #777777; }
+.poodle-side-panel .panel-error   { font-size: 13px; color: #b33; }
+
+/* ── Fact Check verdict badge ── */
+.poodle-verdict {
+  display: inline-block;
+  margin-bottom: 10px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.poodle-verdict.true            { background: #e6f5e6; color: #1a7a1a; }
+.poodle-verdict.misleading      { background: #fff3e0; color: #b36200; }
+.poodle-verdict.unverifiable    { background: #f0f0f0; color: #555555; }
+.poodle-verdict.dark.true       { background: #1a3a1a; color: #4ade4a; }
+.poodle-verdict.dark.misleading { background: #3a2800; color: #ffb347; }
+.poodle-verdict.dark.unverifiable { background: #2a2a2a; color: #bbbbbb; }
+
+/* ── Translate cultural note ── */
+.poodle-cultural-note {
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: #f6f6f6;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #444444;
+}
+.poodle-cultural-note.dark  { background: #1c1c1c; color: #cccccc; }
+.poodle-cultural-note-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: #999999;
+  margin-bottom: 4px;
+}
+
+/* ── Inline result popup (Simplify / Translate / Fact Check) ── */
+#poodle-inline-result {
+  position: absolute;
+  z-index: 999998;
+  width: 300px;
+  background: #ffffff;
+  color: #111111;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 13px;
+  line-height: 1.6;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.14);
+}
+#poodle-inline-result.dark  { background: #111111; color: #f5f5f5; border-color: #2a2a2a; }
+#poodle-inline-result .ir-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: #999999;
+  margin-bottom: 8px;
+}
+#poodle-inline-result .ir-close {
+  float: right;
+  background: none;
+  border: none;
+  font-size: 14px;
+  cursor: pointer;
+  color: #aaaaaa;
+  margin-left: 8px;
+}
+
+/* ── Side panel custom scrollbar ── */
+.poodle-side-panel::-webkit-scrollbar { width: 6px; }
+.poodle-side-panel::-webkit-scrollbar-track { background: transparent; }
+.poodle-side-panel::-webkit-scrollbar-thumb { background: #cccccc; border-radius: 10px; }
+.poodle-side-panel::-webkit-scrollbar-thumb:hover { background: #aaaaaa; }
+.poodle-side-panel.dark::-webkit-scrollbar-thumb { background: #3a3a3a; }
+.poodle-side-panel.dark::-webkit-scrollbar-thumb:hover { background: #555555; }
+
+/* ── Dark mode explicit text contrast ── */
+#poodle-inline-result.dark            { background: #111111; color: #f5f5f5; border-color: #2a2a2a; }
+#poodle-inline-result.dark .ir-label  { color: #666666; }
+#poodle-inline-result.dark .ir-close  { color: #777777; }
+#poodle-inline-result.dark #poodle-ir-body { color: #f0f0f0; }
+
+.poodle-side-panel.dark                     { background: #111111; color: #f5f5f5; border-left-color: #2a2a2a; }
+.poodle-side-panel.dark .panel-loading      { color: #666666; }
+.poodle-side-panel.dark .panel-error        { color: #ff6b6b; }
+.poodle-side-panel.dark .panel-content      { color: #f0f0f0; }
+.poodle-side-panel.dark .panel-content li   { color: #f0f0f0; }
+.poodle-side-panel.dark .panel-content p    { color: #f0f0f0; }
+.poodle-side-panel.dark .panel-close        { color: #f5f5f5; }
+
+#poodle-link-info-card.dark .li-loading     { color: #666666; }
+#poodle-link-info-card.dark .li-muted       { color: #666666; }
+#poodle-link-info-card.dark #li-dest-row    { color: #999999; }
