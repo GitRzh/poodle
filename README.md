@@ -1,4 +1,4 @@
-# Poodle — AI Browser Extension
+# Poodle — Browser Toolkit Extension
 
 > Highlight text, hover a link, or click a button. Get instant summaries, translations, simplifications, fact checks, and link safety — on any webpage.
 
