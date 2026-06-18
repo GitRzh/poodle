@@ -9,11 +9,10 @@ const keyStatusEl = document.getElementById("key-status");
 function updateKeyStatus(key) {
   if (!keyStatusEl) return;
   if (key) {
-    keyStatusEl.textContent = `✓ Using your key (ends in ...${key.slice(-4)})`;
+    keyStatusEl.textContent = `Using your key (ends in ...${key.slice(-4)})`;
     keyStatusEl.style.color = "#1a7a1a";
   } else {
-    keyStatusEl.textContent = "Using default key — works out of the box.";
-    keyStatusEl.style.color = "#888";
+    keyStatusEl.textContent = "";
   }
 }
 
@@ -40,7 +39,7 @@ saveBtn.addEventListener("click", () => {
     return;
   }
   chrome.storage.sync.set({ userApiKey: key }, () => {
-    statusEl.textContent = "Saved!";
+    statusEl.textContent = "Saved.";
     statusEl.style.color = "#1a7a1a";
     updateKeyStatus(key);
     setTimeout(() => { statusEl.textContent = ""; }, 3000);
@@ -50,7 +49,7 @@ saveBtn.addEventListener("click", () => {
 clearBtn.addEventListener("click", () => {
   chrome.storage.sync.remove("userApiKey", () => {
     apiKeyInput.value = "";
-    statusEl.textContent = "Cleared — using default key.";
+    statusEl.textContent = "Removed — using default.";
     statusEl.style.color = "#888";
     updateKeyStatus("");
     setTimeout(() => { statusEl.textContent = ""; }, 3000);

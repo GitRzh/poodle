@@ -3,20 +3,23 @@
 venv/
 env/
 
-# Python cache
-__pycache__/
+# Python cache — anywhere in the repo
+**/__pycache__/
 *.pyc
 *.pyo
 *.pyd
 .Python
 
-# Environment — never push your API key
-backend/.env
+# Environment — never push API keys
 .env
 .env.local
+backend/.env
 
-# Python version file
+# Python version
 .python-version
+
+# Dockerfile only needed on HF Space, not GitHub
+backend/Dockerfile
 
 # OS
 .DS_Store
