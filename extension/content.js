@@ -90,6 +90,54 @@ async function runQuickSummary(length, format, fontSize) {
 }
 
 // ═══════════════════════════════════════════════════════
+// FEATURE 1b — SUMMARIZE SELECTION (context-menu)
+// ═══════════════════════════════════════════════════════
+let _summarizeInFlight = false;
+let _summarizeCache    = null; // { key, result }
+
+async function runSummarizeSelection(text, length, format, fontSize) {
+  if (_summarizeInFlight) return;
+
+  const cacheKey = text + "|" + length + "|" + format + "|" + fontSize;
+  const popup = createInlinePopup("Summary");
+  showInlineLoading(popup);
+
+  if (_summarizeCache && _summarizeCache.key === cacheKey) {
+    renderSummaryIntoPopup(popup, _summarizeCache.result, format, fontSize);
+    return;
+  }
+
+  _summarizeInFlight = true;
+  try {
+    const data = await backendRequest("/summarize", {
+      text:   text.slice(0, 4000),
+      length: length || "medium",
+      format: format || "paragraph"
+    });
+    const result = data.result || "";
+    _summarizeCache = { key: cacheKey, result };
+    renderSummaryIntoPopup(popup, result, format, fontSize);
+  } catch (e) {
+    setInlineContent(popup, "Error: " + e.message, true);
+  } finally {
+    _summarizeInFlight = false;
+  }
+}
+
+function renderSummaryIntoPopup(popup, result, format, fontSize) {
+  const sizeMap = { small: "14px", medium: "17px", large: "20px", xl: "24px" };
+  const fs = sizeMap[fontSize] || "17px";
+  if (format === "bullets") {
+    const lines = result.split("\n").filter(l => l.trim());
+    setInlineHTML(popup, `<ul style="padding-left:18px;line-height:1.8;font-size:${fs}">` +
+      lines.map(l => `<li>${escHtml(l.replace(/^[-*•]\s*/, ""))}</li>`).join("") + "</ul>");
+  } else {
+    setInlineHTML(popup, result.split("\n\n")
+      .map(p => `<p style="margin-bottom:10px;font-size:${fs}">${escHtml(p)}</p>`).join(""));
+  }
+}
+
+// ═══════════════════════════════════════════════════════
 // FEATURE 2 — SIMPLIFY THIS
 // ═══════════════════════════════════════════════════════
 async function runSimplifySelection(text, level) {
@@ -420,6 +468,10 @@ chrome.runtime.onMessage.addListener((msg) => {
 
     case "QUICK_SUMMARY":
       runQuickSummary(msg.length, msg.format, msg.fontSize);
+      break;
+
+    case "SUMMARIZE_SELECTION":
+      runSummarizeSelection(msg.text, msg.length, msg.format, msg.fontSize);
       break;
 
     case "SIMPLIFY_SELECTION":

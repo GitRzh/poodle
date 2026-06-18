@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from services.llm_client import chat
+from services.llm_client import chat, LLMError
 from services.prompts import translate_prompt
 
 router = APIRouter()
@@ -26,5 +26,7 @@ async def translate(req: TranslateRequest):
             "translation": translation,
             "note": note if note and note != "No special notes." else None
         }
+    except LLMError as e:
+        raise HTTPException(e.status_code, e.message)
     except Exception as e:
         raise HTTPException(500, str(e))

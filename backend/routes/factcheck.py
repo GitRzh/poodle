@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from services.llm_client import chat
+from services.llm_client import chat, LLMError
 from services.prompts import factcheck_prompt
 import json, re
 
@@ -25,6 +25,8 @@ async def factcheck(req: FactCheckRequest):
             "verdict": data.get("verdict", "unverifiable"),
             "reason":  data.get("reason", "")
         }
+    except LLMError as e:
+        raise HTTPException(e.status_code, e.message)
     except json.JSONDecodeError:
         raise HTTPException(500, "Model returned unexpected format")
     except Exception as e:

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from services.llm_client import chat
+from services.llm_client import chat, LLMError
 from services.prompts import simplify_prompt
 
 router = APIRouter()
@@ -20,5 +20,7 @@ async def simplify(req: SimplifyRequest):
     try:
         result = await chat([{"role": "user", "content": prompt}], api_key=req.api_key)
         return {"result": result}
+    except LLMError as e:
+        raise HTTPException(e.status_code, e.message)
     except Exception as e:
         raise HTTPException(500, str(e))

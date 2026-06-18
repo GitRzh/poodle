@@ -2,6 +2,9 @@ const themeToggle = document.getElementById("theme-toggle");
 const themeIcon   = document.getElementById("theme-icon");
 const openOptions = document.getElementById("open-options");
 
+// Same set used in background.js — pages a content script can't run on.
+const RESTRICTED_URL_REGEX = /^(chrome|brave|edge|about|file|chrome-extension):/;
+
 const DEFAULTS = {
   theme: "light",
   quickSummaryEnabled: false,
@@ -54,8 +57,8 @@ function send(message, callback) {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     const tab = tabs[0];
     if (!tab || !tab.id) return;
-    if (tab.url && /^(chrome|brave|edge|about):/.test(tab.url)) {
-      notice("Poodle can't run on this type of page."); return;
+    if (tab.url && RESTRICTED_URL_REGEX.test(tab.url)) {
+      notice("Not supported on this page."); return;
     }
     chrome.tabs.sendMessage(tab.id, message, (res) => {
       if (chrome.runtime.lastError) {
@@ -85,7 +88,7 @@ function notice(text) {
 function checkPage() {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     const tab = tabs[0];
-    if (tab && tab.url && /^(chrome|brave|edge|about|file|chrome-extension):/.test(tab.url))
+    if (tab && tab.url && RESTRICTED_URL_REGEX.test(tab.url))
       notice("Not supported on this page.");
   });
 }
@@ -107,11 +110,6 @@ document.getElementById("quicksummary-toggle").addEventListener("change", (e) =>
 document.getElementById("qs-length").addEventListener("change",   (e) => save("qsLength",   e.target.value));
 document.getElementById("qs-format").addEventListener("change",   (e) => save("qsFormat",   e.target.value));
 document.getElementById("qs-fontsize").addEventListener("change", (e) => save("qsFontSize", e.target.value));
-document.getElementById("quicksummary-btn").addEventListener("click", () => {
-  chrome.storage.sync.get(["qsLength","qsFormat","qsFontSize"], (s) => {
-    send({ type: "QUICK_SUMMARY", length: s.qsLength, format: s.qsFormat, fontSize: s.qsFontSize });
-  });
-});
 
 // ── Simplify This ─────────────────────────────────────
 document.getElementById("simplify-toggle").addEventListener("change", (e) => {

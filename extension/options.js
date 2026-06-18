@@ -32,7 +32,7 @@ themeToggle.addEventListener("click", () => {
 
 saveBtn.addEventListener("click", () => {
   const key = apiKeyInput.value.trim();
-  if (!key) { statusEl.textContent = "Enter a key first."; return; }
+  if (!key) { statusEl.textContent = "Please enter a key."; return; }
   if (!key.startsWith("gsk_")) {
     statusEl.textContent = "Groq keys start with gsk_ — check yours.";
     statusEl.style.color = "#b33";
@@ -49,7 +49,9 @@ saveBtn.addEventListener("click", () => {
 clearBtn.addEventListener("click", () => {
   chrome.storage.sync.remove("userApiKey", () => {
     apiKeyInput.value = "";
-    statusEl.textContent = "Removed — using default.";
+    // No default/shared key exists server-side — say so plainly instead
+    // of implying the extension will keep working without one.
+    statusEl.textContent = "Removed. Please enter a key.";
     statusEl.style.color = "#888";
     updateKeyStatus("");
     setTimeout(() => { statusEl.textContent = ""; }, 3000);
