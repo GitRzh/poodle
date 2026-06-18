@@ -7,15 +7,18 @@ import json, re
 router = APIRouter()
 
 class FactCheckRequest(BaseModel):
-    text: str
+    text:    str
+    api_key: str = ""
 
 @router.post("")
 async def factcheck(req: FactCheckRequest):
     if not req.text.strip():
         raise HTTPException(400, "text is required")
+    if not req.api_key:
+        raise HTTPException(401, "No API key provided. Add your Groq key in Poodle settings.")
     prompt = factcheck_prompt(req.text[:2000])
     try:
-        raw = await chat([{"role": "user", "content": prompt}], temperature=0.1)
+        raw   = await chat([{"role": "user", "content": prompt}], api_key=req.api_key, temperature=0.1)
         clean = re.sub(r"```json|```", "", raw).strip()
         data  = json.loads(clean)
         return {
