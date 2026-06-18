@@ -53,10 +53,10 @@ function flashBadge(text) {
 // ── Context menu setup ────────────────────────────────
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.removeAll(() => {
+    chrome.contextMenus.create({ id: "poodle-summarize", title: "Summarize This",       contexts: ["selection"] });
     chrome.contextMenus.create({ id: "poodle-simplify",  title: "Simplify This",        contexts: ["selection"] });
     chrome.contextMenus.create({ id: "poodle-translate", title: "Translate and Explain", contexts: ["selection"] });
-    chrome.contextMenus.create({ id: "poodle-factcheck", title: "Fact Check",            contexts: ["selection"] });
-    chrome.contextMenus.create({ id: "poodle-summarize", title: "Summarize This",        contexts: ["selection"] });
+    chrome.contextMenus.create({ id: "poodle-factcheck", title: "Fact Check",           contexts: ["selection"] });
   });
 });
 

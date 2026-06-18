@@ -98,6 +98,17 @@ let _summarizeCache    = null; // { key, result }
 async function runSummarizeSelection(text, length, format, fontSize) {
   if (_summarizeInFlight) return;
 
+  // ── Warn if selection is too short for a meaningful summary ──
+  if (text.length < 80) {
+    const popup = createInlinePopup("Summary");
+    setInlineHTML(popup, `
+      <div style="color:#b8860b;font-size:13px;line-height:1.6;padding:4px 0">
+        ⚠ Selection is too short (${text.length} chars). Please select more text for an accurate summary.
+      </div>
+    `);
+    return;
+  }
+
   const cacheKey = text + "|" + length + "|" + format + "|" + fontSize;
   const popup = createInlinePopup("Summary");
   showInlineLoading(popup);
@@ -475,18 +486,15 @@ chrome.runtime.onMessage.addListener((msg) => {
       break;
 
     case "SIMPLIFY_SELECTION":
-      if (state.simplifyEnabled)
-        runSimplifySelection(msg.text, msg.level || state.simplifyLevel);
+      runSimplifySelection(msg.text, msg.level || state.simplifyLevel);
       break;
 
     case "TRANSLATE_SELECTION":
-      if (state.translateEnabled)
-        runTranslateSelection(msg.text, msg.lang || state.translateLang);
+      runTranslateSelection(msg.text, msg.lang || state.translateLang);
       break;
 
     case "FACTCHECK_SELECTION":
-      if (state.factCheckEnabled)
-        runFactCheck(msg.text);
+      runFactCheck(msg.text);
       break;
 
     case "TOGGLE_LINKCHECK":
