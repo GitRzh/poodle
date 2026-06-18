@@ -25,5 +25,3 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
-
-backend/Dockerfile

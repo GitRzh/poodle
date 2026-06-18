@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════
 
 const LOCAL   = "http://localhost:8000";
-const REMOTE  = "https://your-app.koyeb.app"; // replace after deploying
+const REMOTE = "https://rzhface-poodle.hf.space"
 
 // Try local first, fall back to remote
 async function fetchBackend(endpoint, body) {

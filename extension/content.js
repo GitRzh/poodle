@@ -201,7 +201,7 @@ async function checkDomainAge(domain) {
   if (!row) return;
   try {
     const LOCAL  = "http://localhost:8000";
-    const REMOTE = "https://your-app.koyeb.app"; // replace after deploying
+    const REMOTE = "https://rzhface-poodle.hf.space";
     let res = null;
     for (const base of [LOCAL, REMOTE]) {
       try {
