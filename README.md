@@ -9,7 +9,7 @@
 Poodle is a browser extension that layers AI tools directly onto your browsing experience. No switching tabs, no copy-pasting. Select text and right-click, or hover a link, and Poodle acts on it instantly.
 
 **Features:**
-- Summarise any webpage in one click — short, medium, or full length, prose or bullets
+- Highlight any text and summarise — short, medium, or full length, prose or bullets
 - Highlight any text and simplify it to plain English, child level, or teen level
 - Highlight any text and translate it to 11 languages with cultural notes on idioms
 - Highlight any claim and fact-check it — returns likely true, misleading, or unverifiable
@@ -25,7 +25,7 @@ Poodle is a browser extension that layers AI tools directly onto your browsing e
 | Backend | Python, FastAPI, httpx |
 | LLM | Llama 3 8B via Groq API |
 | Domain age | RDAP.org (no key needed) |
-| Deployment | Koyeb |
+| Deployment (Backend Only) | HuggingFace Space |
 
 ---
 
