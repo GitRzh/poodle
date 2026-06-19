@@ -7,3 +7,4 @@ backend/.gitignore
 *.pyc
 *.pyo
 .venv/
+.python-version

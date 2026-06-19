@@ -23,6 +23,9 @@
   left: 20px;
   z-index: 999999;
   width: 260px;
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  overflow-x: hidden;
   background: #ffffff;
   color: #111111;
   border: 1px solid #e0e0e0;
@@ -35,10 +38,19 @@
   opacity: 0;
   transform: translateY(8px);
   transition: opacity 0.12s, transform 0.12s;
+  scrollbar-width: thin;
+  scrollbar-color: #cccccc transparent;
 }
+#poodle-link-info-card::-webkit-scrollbar { width: 6px; }
+#poodle-link-info-card::-webkit-scrollbar-track { background: transparent; }
+#poodle-link-info-card::-webkit-scrollbar-thumb { background: #cccccc; border-radius: 10px; }
+#poodle-link-info-card::-webkit-scrollbar-thumb:hover { background: #aaaaaa; }
+#poodle-link-info-card.dark::-webkit-scrollbar-thumb { background: #3a3a3a; }
+#poodle-link-info-card.dark::-webkit-scrollbar-thumb:hover { background: #555555; }
 #poodle-link-info-card.visible { opacity: 1; transform: translateY(0); }
 #poodle-link-info-card.dark    { background: #111111; color: #f5f5f5; border-color: #2a2a2a; }
 #poodle-link-info-card .li-domain  { font-weight: 700; margin-bottom: 6px; word-break: break-all; }
+#poodle-link-info-card .li-header  { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
 #poodle-link-info-card .li-row     { margin-bottom: 3px; }
 #poodle-link-info-card .li-ok      { color: #1a7a1a; }
 #poodle-link-info-card.dark .li-ok { color: #4ade4a; }
@@ -59,19 +71,21 @@
 
 /* ── Shared side panel ── */
 .poodle-side-panel {
-  position: fixed;
-  top: 0; right: 0;
-  height: 100%;
+  position: fixed !important;
+  top: 20px; right: 0;
+  max-height: calc(100vh - 40px);
   width: 360px;
   background: #ffffff;
   color: #111111;
   border-left: 1px solid #e0e0e0;
+  border-radius: 10px 0 0 10px;
   z-index: 999999;
-  padding: 20px 20px 60px;
-  overflow-y: auto;
+  padding: 20px 20px 24px;
+  overflow-y: auto !important;
+  overflow-x: hidden;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   box-shadow: -2px 0 12px rgba(0,0,0,0.08);
-  box-sizing: border-box;
+  box-sizing: border-box !important;
 }
 .poodle-side-panel.dark { background: #111111; color: #f5f5f5; border-left-color: #2a2a2a; }
 .poodle-side-panel .panel-header {
@@ -128,6 +142,9 @@
   position: absolute;
   z-index: 999998;
   width: 300px;
+  max-height: calc(100vh - 16px);
+  overflow-y: auto;
+  overflow-x: hidden;
   background: #ffffff;
   color: #111111;
   border: 1px solid #e0e0e0;
@@ -137,6 +154,7 @@
   font-size: 13px;
   line-height: 1.6;
   box-shadow: 0 4px 20px rgba(0,0,0,0.14);
+  box-sizing: border-box;
 }
 #poodle-inline-result.dark  { background: #111111; color: #f5f5f5; border-color: #2a2a2a; }
 #poodle-inline-result .ir-label {
@@ -147,6 +165,29 @@
   color: #999999;
   margin-bottom: 8px;
 }
+/* Font-size dropdown styled to match the label text beside it */
+#poodle-inline-result .ir-fontsize-select,
+#poodle-link-info-card .li-fontsize-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background: none;
+  border: none;
+  outline: none;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: #999999;
+  cursor: pointer;
+  padding: 0 2px;
+  margin-left: 4px;
+  font-family: inherit;
+}
+#poodle-inline-result.dark .ir-fontsize-select,
+#poodle-link-info-card.dark .li-fontsize-select {
+  color: #666666;
+  background: none;
+}
 #poodle-inline-result .ir-close {
   float: right;
   background: none;
@@ -156,14 +197,29 @@
   color: #aaaaaa;
   margin-left: 8px;
 }
+#poodle-ir-body {
+  max-height: 280px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  word-break: break-word;
+  width: 100%;
+}
+#poodle-ir-body::-webkit-scrollbar { width: 6px; }
+#poodle-ir-body::-webkit-scrollbar-track { background: transparent; }
+#poodle-ir-body::-webkit-scrollbar-thumb { background: #cccccc; border-radius: 10px; }
+#poodle-ir-body::-webkit-scrollbar-thumb:hover { background: #aaaaaa; }
+#poodle-inline-result.dark #poodle-ir-body::-webkit-scrollbar-thumb { background: #3a3a3a; }
+#poodle-inline-result.dark #poodle-ir-body::-webkit-scrollbar-thumb:hover { background: #555555; }
 
 /* ── Side panel custom scrollbar ── */
-.poodle-side-panel::-webkit-scrollbar { width: 6px; }
+.poodle-side-panel { scrollbar-width: thin; scrollbar-color: #cccccc transparent; }
+.poodle-side-panel.dark { scrollbar-color: #3a3a3a transparent; }
+.poodle-side-panel::-webkit-scrollbar { width: 8px; }
 .poodle-side-panel::-webkit-scrollbar-track { background: transparent; }
-.poodle-side-panel::-webkit-scrollbar-thumb { background: #cccccc; border-radius: 10px; }
-.poodle-side-panel::-webkit-scrollbar-thumb:hover { background: #aaaaaa; }
-.poodle-side-panel.dark::-webkit-scrollbar-thumb { background: #3a3a3a; }
-.poodle-side-panel.dark::-webkit-scrollbar-thumb:hover { background: #555555; }
+.poodle-side-panel::-webkit-scrollbar-thumb { background: #cccccc; border-radius: 10px; border: 2px solid transparent; background-clip: padding-box; }
+.poodle-side-panel::-webkit-scrollbar-thumb:hover { background: #aaaaaa; background-clip: padding-box; }
+.poodle-side-panel.dark::-webkit-scrollbar-thumb { background: #3a3a3a; background-clip: padding-box; }
+.poodle-side-panel.dark::-webkit-scrollbar-thumb:hover { background: #555555; background-clip: padding-box; }
 
 /* ── Dark mode explicit text contrast ── */
 #poodle-inline-result.dark            { background: #111111; color: #f5f5f5; border-color: #2a2a2a; }

@@ -1,3 +1,15 @@
+// ── Guard against double-injection ─────────────────────
+// content.js is registered in manifest.json's content_scripts AND can be
+// manually re-injected by popup.js's send() fallback when sendMessage fails
+// (e.g. right after install, before the page has the auto-injected copy
+// listening yet). Re-running this file in the same page redeclares `state`
+// and throws, killing every Poodle feature on that tab. Bail out early if
+// we've already run here.
+if (window.__poodleContentLoaded__) {
+  // Already running on this page — do nothing.
+} else {
+  window.__poodleContentLoaded__ = true;
+
 // ── State ─────────────────────────────────────────────
 const state = {
   linkCheckEnabled: false,
@@ -6,7 +18,8 @@ const state = {
   translateEnabled: false,
   translateLang: "English",
   factCheckEnabled: false,
-  dark: false
+  dark: false,
+  popupFontSize: "medium"
 };
 
 // ── Helpers ───────────────────────────────────────────
@@ -40,7 +53,7 @@ function getPageText() {
 // ── Init from storage ─────────────────────────────────
 chrome.storage.sync.get([
   "linkCheckEnabled","simplifyEnabled","simplifyLevel",
-  "translateEnabled","translateLang","factCheckEnabled","theme"
+  "translateEnabled","translateLang","factCheckEnabled","theme","popupFontSize"
 ], (s) => {
   state.dark            = s.theme === "dark";
   state.linkCheckEnabled = s.linkCheckEnabled  || false;
@@ -49,6 +62,7 @@ chrome.storage.sync.get([
   state.translateEnabled = s.translateEnabled  || false;
   state.translateLang    = s.translateLang     || "English";
   state.factCheckEnabled = s.factCheckEnabled  || false;
+  state.popupFontSize    = s.popupFontSize     || "medium";
 
   if (state.linkCheckEnabled) initLinkCheck();
 });
@@ -114,7 +128,7 @@ async function runSummarizeSelection(text, length, format, fontSize) {
   showInlineLoading(popup);
 
   if (_summarizeCache && _summarizeCache.key === cacheKey) {
-    renderSummaryIntoPopup(popup, _summarizeCache.result, format, fontSize);
+    renderSummaryIntoPopup(popup, _summarizeCache.result, format);
     return;
   }
 
@@ -127,7 +141,7 @@ async function runSummarizeSelection(text, length, format, fontSize) {
     });
     const result = data.result || "";
     _summarizeCache = { key: cacheKey, result };
-    renderSummaryIntoPopup(popup, result, format, fontSize);
+    renderSummaryIntoPopup(popup, result, format);
   } catch (e) {
     setInlineContent(popup, "Error: " + e.message, true);
   } finally {
@@ -135,16 +149,20 @@ async function runSummarizeSelection(text, length, format, fontSize) {
   }
 }
 
-function renderSummaryIntoPopup(popup, result, format, fontSize) {
-  const sizeMap = { small: "14px", medium: "17px", large: "20px", xl: "24px" };
-  const fs = sizeMap[fontSize] || "17px";
+// Strip common LLM preamble lines from bullet output
+function stripPreamble(lines) {
+  const preambleRe = /^(here|below|sure|certainly|of course|the following)/i;
+  return lines.filter(l => !preambleRe.test(l.trim()));
+}
+
+function renderSummaryIntoPopup(popup, result, format) {
   if (format === "bullets") {
-    const lines = result.split("\n").filter(l => l.trim());
-    setInlineHTML(popup, `<ul style="padding-left:18px;line-height:1.8;font-size:${fs}">` +
+    const lines = stripPreamble(result.split("\n").filter(l => l.trim()));
+    setInlineHTML(popup, `<ul style="padding-left:18px;line-height:1.8">` +
       lines.map(l => `<li>${escHtml(l.replace(/^[-*•]\s*/, ""))}</li>`).join("") + "</ul>");
   } else {
     setInlineHTML(popup, result.split("\n\n")
-      .map(p => `<p style="margin-bottom:10px;font-size:${fs}">${escHtml(p)}</p>`).join(""));
+      .map(p => `<p style="margin-bottom:10px">${escHtml(p)}</p>`).join(""));
   }
 }
 
@@ -250,7 +268,15 @@ function showLinkCard(href) {
     const dest    = url.hostname + (url.pathname !== "/" ? url.pathname.slice(0, 30) : "");
 
     linkCard.innerHTML = `
-      <div class="li-domain">${escHtml(domain)}</div>
+      <div class="li-header">
+        <div class="li-domain" style="margin-bottom:0">${escHtml(domain)}</div>
+        <select class="li-fontsize-select" title="Text size" aria-label="Text size">
+          <option value="small">S</option>
+          <option value="medium">M</option>
+          <option value="large">L</option>
+          <option value="xl">XL</option>
+        </select>
+      </div>
       <div class="li-row li-muted" id="li-dest-row">→ ${escHtml(dest)}</div>
       <div class="li-row ${isHttps ? "li-ok" : "li-warn"}">${isHttps ? "✓ HTTPS secure" : "✗ Not HTTPS — unencrypted"}</div>
       <div class="li-row" id="li-age-row">Checking age…</div>
@@ -258,6 +284,18 @@ function showLinkCard(href) {
     `;
     linkCard.classList.add("visible");
     if (isDark()) linkCard.classList.add("dark");
+
+    // Wire font-size selector
+    const fsSelect = linkCard.querySelector(".li-fontsize-select");
+    fsSelect.value = state.popupFontSize || "medium";
+    applyLinkCardFontSize(state.popupFontSize || "medium");
+    fsSelect.addEventListener("change", (e) => {
+      e.stopPropagation();
+      state.popupFontSize = e.target.value;
+      chrome.storage.sync.set({ popupFontSize: e.target.value });
+      applyLinkCardFontSize(e.target.value);
+    });
+    fsSelect.addEventListener("mousedown", (e) => e.stopPropagation());
 
     checkDomainAge(domain);
     checkTypoSquat(domain);
@@ -387,6 +425,7 @@ function showError(panel, msg) {
 }
 
 let inlinePopup = null;
+let _lastPopupPos = null; // remember last drag position
 
 function createInlinePopup(label) {
   if (inlinePopup) inlinePopup.remove();
@@ -399,28 +438,126 @@ function createInlinePopup(label) {
   inlinePopup.id = "poodle-inline-result";
   if (isDark()) inlinePopup.classList.add("dark");
   inlinePopup.innerHTML = `
-    <div class="ir-label">
+    <div class="ir-label" id="poodle-drag-handle">
+      <span class="ir-drag-icon" title="Drag to move">⠿</span>
+      <span class="ir-title">${escHtml(label)}</span>
+      <select class="ir-fontsize-select" title="Text size" aria-label="Text size">
+        <option value="small">S</option>
+        <option value="medium">M</option>
+        <option value="large">L</option>
+        <option value="xl">XL</option>
+      </select>
       <button class="ir-close" aria-label="Close">✕</button>
-      ${escHtml(label)}
     </div>
     <div id="poodle-ir-body">Loading…</div>
   `;
-  inlinePopup.querySelector(".ir-close").addEventListener("click", () => inlinePopup.remove());
+  inlinePopup.querySelector(".ir-close").addEventListener("click", () => {
+    inlinePopup.remove();
+    inlinePopup = null;
+  });
+
+  // ── Font size selector ────────────────────────────────
+  const fsSelect = inlinePopup.querySelector(".ir-fontsize-select");
+  fsSelect.value = state.popupFontSize || "medium";
+  applyPopupFontSize(inlinePopup, fsSelect.value);
+  fsSelect.addEventListener("change", (e) => {
+    e.stopPropagation();
+    state.popupFontSize = e.target.value;
+    chrome.storage.sync.set({ popupFontSize: e.target.value });
+    applyPopupFontSize(inlinePopup, e.target.value);
+  });
+  fsSelect.addEventListener("mousedown", (e) => e.stopPropagation());
 
   document.body.appendChild(inlinePopup);
 
-  if (rect) {
-    const top  = rect.bottom + window.scrollY + 8;
-    const left = Math.min(rect.left + window.scrollX, window.innerWidth - 320);
-    inlinePopup.style.top  = top  + "px";
-    inlinePopup.style.left = Math.max(8, left) + "px";
+  // ── Position: use last drag pos, or near selection, or fallback ──
+  if (_lastPopupPos) {
+    inlinePopup.style.position = "fixed";
+    inlinePopup.style.top  = _lastPopupPos.top  + "px";
+    inlinePopup.style.left = _lastPopupPos.left + "px";
+  } else if (rect) {
+    // position fixed relative to viewport
+    // The popup can grow up to ~340px (header + 280px body cap + padding),
+    // so reserve that much room rather than an arbitrary 200px guess —
+    // otherwise long results spill off the bottom of the screen.
+    const POPUP_MAX_HEIGHT = 340;
+    const top  = Math.min(rect.bottom + 8, window.innerHeight - POPUP_MAX_HEIGHT);
+    const left = Math.min(Math.max(8, rect.left), window.innerWidth - 320);
+    inlinePopup.style.position = "fixed";
+    inlinePopup.style.top  = Math.max(8, top)  + "px";
+    inlinePopup.style.left = left + "px";
   } else {
+    inlinePopup.style.position = "fixed";
     inlinePopup.style.top  = "80px";
     inlinePopup.style.right = "20px";
     inlinePopup.style.left = "auto";
   }
 
+  // ── Drag logic ────────────────────────────────────────
+  const handle = inlinePopup.querySelector("#poodle-drag-handle");
+  let dragging = false, startX, startY, origLeft, origTop;
+
+  handle.addEventListener("mousedown", (e) => {
+    if (e.target.classList.contains("ir-close")) return;
+    dragging = true;
+    const box = inlinePopup.getBoundingClientRect();
+    startX   = e.clientX;
+    startY   = e.clientY;
+    origLeft = box.left;
+    origTop  = box.top;
+    inlinePopup.style.right = "auto";
+    inlinePopup.style.transition = "none";
+    e.preventDefault();
+  });
+
+  document.addEventListener("mousemove", (e) => {
+    if (!dragging) return;
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+    const newLeft = Math.max(0, Math.min(origLeft + dx, window.innerWidth  - inlinePopup.offsetWidth));
+    const newTop  = Math.max(0, Math.min(origTop  + dy, window.innerHeight - inlinePopup.offsetHeight));
+    inlinePopup.style.left = newLeft + "px";
+    inlinePopup.style.top  = newTop  + "px";
+  });
+
+  document.addEventListener("mouseup", () => {
+    if (!dragging) return;
+    dragging = false;
+    if (inlinePopup) {
+      const box = inlinePopup.getBoundingClientRect();
+      _lastPopupPos = { top: box.top, left: box.left };
+    }
+  });
+
   return inlinePopup;
+}
+
+// ── Apply font size to inline popup body ─────────────
+function applyPopupFontSize(popup, size) {
+  const sizeMap = { small: "13px", medium: "15px", large: "18px", xl: "22px" };
+  const body = popup ? popup.querySelector("#poodle-ir-body") : null;
+  if (!body) return;
+  const fs = sizeMap[size] || "15px";
+  body.style.fontSize = fs;
+  // Also apply to all child elements so inline styles don't override
+  body.querySelectorAll("p, li, div, span").forEach(el => {
+    el.style.fontSize = fs;
+  });
+}
+
+// ── Apply font size to link check card rows ───────────
+function applyLinkCardFontSize(size) {
+  if (!linkCard) return;
+  const sizeMap = { small: "11px", medium: "13px", large: "15px", xl: "18px" };
+  const fs = sizeMap[size] || "13px";
+  linkCard.querySelectorAll(".li-row, .li-domain, #li-dest-row").forEach(el => {
+    el.style.fontSize = fs;
+  });
+}
+
+function showFeatureDisabledNotice() {
+  const popup = createInlinePopup("Poodle");
+  setInlineContent(popup, "Please turn on this setting in the Poodle popup before proceeding.");
 }
 
 function showInlineLoading(popup) {
@@ -433,11 +570,14 @@ function setInlineContent(popup, text, isError) {
   if (!body) return;
   body.style.color = isError ? "#b33" : "";
   body.textContent = text;
+  applyPopupFontSize(popup, state.popupFontSize || "medium");
 }
 
 function setInlineHTML(popup, html) {
   const body = popup ? popup.querySelector("#poodle-ir-body") : null;
-  if (body) body.innerHTML = html;
+  if (!body) return;
+  body.innerHTML = html;
+  applyPopupFontSize(popup, state.popupFontSize || "medium");
 }
 
 function escHtml(str) {
@@ -481,6 +621,10 @@ chrome.runtime.onMessage.addListener((msg) => {
       runQuickSummary(msg.length, msg.format, msg.fontSize);
       break;
 
+    case "FEATURE_DISABLED_NOTICE":
+      showFeatureDisabledNotice();
+      break;
+
     case "SUMMARIZE_SELECTION":
       runSummarizeSelection(msg.text, msg.length, msg.format, msg.fontSize);
       break;
@@ -499,7 +643,10 @@ chrome.runtime.onMessage.addListener((msg) => {
 
     case "TOGGLE_LINKCHECK":
       state.linkCheckEnabled = msg.enabled;
-      msg.enabled ? initLinkCheck() : teardownLinkCheck();
+      // Always teardown first — ensures a fresh card is created even on tabs
+      // where an older injected copy already ran initLinkCheck() once.
+      teardownLinkCheck();
+      if (msg.enabled) initLinkCheck();
       break;
 
     case "TOGGLE_SIMPLIFY":
@@ -526,5 +673,21 @@ chrome.runtime.onMessage.addListener((msg) => {
       state.dark = msg.dark;
       applyThemeToAllOverlays(msg.dark);
       break;
+
+    case "UPDATE_POPUP_FONTSIZE":
+      state.popupFontSize = msg.size;
+      if (inlinePopup) {
+        const sel = inlinePopup.querySelector(".ir-fontsize-select");
+        if (sel) sel.value = msg.size;
+        applyPopupFontSize(inlinePopup, msg.size);
+      }
+      if (linkCard) {
+        const lsel = linkCard.querySelector(".li-fontsize-select");
+        if (lsel) lsel.value = msg.size;
+        applyLinkCardFontSize(msg.size);
+      }
+      break;
   }
 });
+
+} // end double-injection guard

@@ -80,18 +80,39 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
   };
   const type = typeMap[info.menuItemId];
   if (!type) return;
-  chrome.storage.sync.get(["simplifyLevel", "translateLang", "theme", "qsLength", "qsFormat", "qsFontSize"], (s) => {
-    chrome.tabs.sendMessage(tab.id, {
-      type,
-      text:     info.selectionText,
-      level:    s.simplifyLevel || "simple",
-      lang:     s.translateLang  || "English",
-      length:   s.qsLength      || "medium",
-      format:   s.qsFormat      || "paragraph",
-      fontSize: s.qsFontSize    || "medium",
-      dark:     s.theme === "dark"
-    }, () => { void chrome.runtime.lastError; });
-  });
+
+  // Which storage flag gates each menu item.
+  const enabledKeyMap = {
+    "poodle-simplify":  "simplifyEnabled",
+    "poodle-translate": "translateEnabled",
+    "poodle-factcheck": "factCheckEnabled",
+    "poodle-summarize": "quickSummaryEnabled"
+  };
+  const enabledKey = enabledKeyMap[info.menuItemId];
+
+  chrome.storage.sync.get(
+    ["simplifyLevel", "translateLang", "theme", "qsLength", "qsFormat", "qsFontSize", enabledKey],
+    (s) => {
+      if (!s[enabledKey]) {
+        chrome.tabs.sendMessage(tab.id, {
+          type: "FEATURE_DISABLED_NOTICE",
+          dark: s.theme === "dark"
+        }, () => { void chrome.runtime.lastError; });
+        return;
+      }
+
+      chrome.tabs.sendMessage(tab.id, {
+        type,
+        text:     info.selectionText,
+        level:    s.simplifyLevel || "simple",
+        lang:     s.translateLang  || "English",
+        length:   s.qsLength      || "medium",
+        format:   s.qsFormat      || "paragraph",
+        fontSize: s.qsFontSize    || "medium",
+        dark:     s.theme === "dark"
+      }, () => { void chrome.runtime.lastError; });
+    }
+  );
 });
 
 // ── Backend proxy ─────────────────────────────────────

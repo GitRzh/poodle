@@ -10,7 +10,7 @@ const DEFAULTS = {
   quickSummaryEnabled: false,
   qsLength: "medium",
   qsFormat: "paragraph",
-  qsFontSize: "medium",
+
   simplifyEnabled: false,
   simplifyLevel: "simple",
   translateEnabled: false,
@@ -20,7 +20,10 @@ const DEFAULTS = {
 };
 
 // ── Boot ──────────────────────────────────────────────
+let _loading = false; // guard: prevent change listeners firing during loadSettings
+
 function loadSettings() {
+  _loading = true;
   chrome.storage.sync.get(DEFAULTS, (s) => {
     document.body.classList.toggle("dark", s.theme === "dark");
     themeIcon.innerHTML = s.theme === "dark" ? "&#9728;" : "&#9789;";
@@ -28,7 +31,6 @@ function loadSettings() {
     bind("quicksummary-toggle", "quicksummary-settings", s.quickSummaryEnabled);
     document.getElementById("qs-length").value   = s.qsLength;
     document.getElementById("qs-format").value   = s.qsFormat;
-    document.getElementById("qs-fontsize").value = s.qsFontSize;
 
     bind("simplify-toggle", "simplify-settings", s.simplifyEnabled);
     document.getElementById("simplify-level").value = s.simplifyLevel;
@@ -38,6 +40,7 @@ function loadSettings() {
 
     bind("linkcheck-toggle", "linkcheck-settings", s.linkCheckEnabled);
     bind("factcheck-toggle", "factcheck-settings", s.factCheckEnabled);
+    _loading = false;
   });
 }
 
@@ -103,40 +106,45 @@ themeToggle.addEventListener("click", () => {
 
 // ── Quick Summary ─────────────────────────────────────
 document.getElementById("quicksummary-toggle").addEventListener("change", (e) => {
+  if (_loading) return;
   const on = e.target.checked;
   document.getElementById("quicksummary-settings").classList.toggle("hidden", !on);
   save("quickSummaryEnabled", on);
 });
-document.getElementById("qs-length").addEventListener("change",   (e) => save("qsLength",   e.target.value));
-document.getElementById("qs-format").addEventListener("change",   (e) => save("qsFormat",   e.target.value));
-document.getElementById("qs-fontsize").addEventListener("change", (e) => save("qsFontSize", e.target.value));
+document.getElementById("qs-length").addEventListener("change",   (e) => { if (_loading) return; save("qsLength",   e.target.value); });
+document.getElementById("qs-format").addEventListener("change",   (e) => { if (_loading) return; save("qsFormat",   e.target.value); });
 
 // ── Simplify This ─────────────────────────────────────
 document.getElementById("simplify-toggle").addEventListener("change", (e) => {
+  if (_loading) return;
   const on = e.target.checked;
   document.getElementById("simplify-settings").classList.toggle("hidden", !on);
   save("simplifyEnabled", on);
   send({ type: "TOGGLE_SIMPLIFY", enabled: on });
 });
 document.getElementById("simplify-level").addEventListener("change", (e) => {
+  if (_loading) return;
   save("simplifyLevel", e.target.value);
   send({ type: "UPDATE_SIMPLIFY_LEVEL", level: e.target.value });
 });
 
 // ── Translate & Explain ───────────────────────────────
 document.getElementById("translate-toggle").addEventListener("change", (e) => {
+  if (_loading) return;
   const on = e.target.checked;
   document.getElementById("translate-settings").classList.toggle("hidden", !on);
   save("translateEnabled", on);
   send({ type: "TOGGLE_TRANSLATE", enabled: on });
 });
 document.getElementById("translate-lang").addEventListener("change", (e) => {
+  if (_loading) return;
   save("translateLang", e.target.value);
   send({ type: "UPDATE_TRANSLATE_LANG", lang: e.target.value });
 });
 
 // ── Link Check ────────────────────────────────────────
 document.getElementById("linkcheck-toggle").addEventListener("change", (e) => {
+  if (_loading) return;
   const on = e.target.checked;
   document.getElementById("linkcheck-settings").classList.toggle("hidden", !on);
   save("linkCheckEnabled", on);
@@ -145,6 +153,7 @@ document.getElementById("linkcheck-toggle").addEventListener("change", (e) => {
 
 // ── Fact Check ────────────────────────────────────────
 document.getElementById("factcheck-toggle").addEventListener("change", (e) => {
+  if (_loading) return;
   const on = e.target.checked;
   document.getElementById("factcheck-settings").classList.toggle("hidden", !on);
   save("factCheckEnabled", on);
